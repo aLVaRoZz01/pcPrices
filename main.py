@@ -1,74 +1,83 @@
 from tabulate import tabulate
-
 import cloudscraper
-
 from bs4 import BeautifulSoup
-
 from requests_html import HTMLSession
+from components import pc
 
-####### Componentes deseados #######
-pc = {
-    # Procesador
-    "Procesador" : {
-        "Nombre": "Intel Core i7-13700K",
-        "Cantidad": 1,
-        "Urls": {
-            "PcComponentes": "https://www.pccomponentes.com/intel-core-i7-13700k-34-ghz-box",
-            "Amazon": "https://www.amazon.es/Intel%C2%AE-Procesador-Escritorio-i7-13700K-n%C3%BAcleos/dp/B0BG6843GX/ref=sr_1_1?__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=17YONP6JL80QI&keywords=Intel+Core+i7-13700K&qid=1666383541&sprefix=intel+core+i7-13700k%2Caps%2C68&sr=8-1",
-            "PcBox": "https://www.pcbox.com/bx8071513700k-cpu-core-i7-13700k-5-4-ghz-lga1700-box/p",
-            "Coolmod": "https://www.coolmod.com/intel-core-i7-13700k-5-4ghz-socket-1700-boxed/"
-        }
-    },
-    # Placa Base
-    # Memora RAM
-    # Caja
-    # Refrigeración
-    # Almacenamiento
-    # Fuente de Alimentación
-    # Tarjeta Gráfica
-}
 
 selectores = {
-    "PcComponentes": "baseprice",
+    "PcComponentes": "precio-main",
     "Amazon": ".a-offscreen",
-    "PcBox": ".vtex-product-price-1-x-currencyInteger",
+    "PcBox": [".vtex-product-price-1-x-currencyInteger", ".vtex-product-price-1-x-currencyFraction"],
     "Coolmod": "#normalpricenumber"
 }
 
 tabla = [["Componente", "Nombre", "Sitio Web", "Cantidad", "Precio Unit", "Precio Total", "URL"]]
+precioFinal = 0.0
 
-
-precios = []
 
 for key, value in pc.items():
     fila = [key, value["Nombre"]]
+    precios = {}
+
     for nombre, url in value["Urls"].items():
         if (nombre == "PcComponentes"):
             session = cloudscraper.create_scraper(delay=10, browser='chrome')
             with session.get(url) as response:
-                print(nombre)
-                print(response)
+                #print(nombre)
+                #print(response)
                 soup = BeautifulSoup(response.text, "html.parser")
                 try:
-                    print(soup.find("span", class_=selectores[nombre]).text)
+                    precio = soup.find("div", id=selectores[nombre]).attrs['data-price'].replace('.', ',')
+                    if(not ',' in precio):
+                        precio += ",00"
+                    #print(precio)
+                    precios[nombre] = precio
                 except:
                     print('Ha cascao')
                     #print(response.text)
         else:
             session = HTMLSession()
             with session.get(url) as response:
-                print(nombre)
-                print(response)
+                #print(nombre)
+                #print(response)
                 response.html.render()
                 try:
-                    print(response.html.find(selectores[nombre], first=True).text)
+                    if (nombre == "PcBox"):
+                        precio = response.html.find(selectores[nombre][0], first=True).text
+                        precio += ','
+                        precio += response.html.find(selectores[nombre][1], first=True).text
+                        precios[nombre] = precio
+                    else:
+                        precio = response.html.find(selectores[nombre], first=True).text.replace('€', '')
+                        precios[nombre] = precio
                 except:
                     print('Ha cascao')
-                    print(response.html)
+                    #print(response.html)
 
-                print('---------')
-                #soup = BeautifulSoup(response.content, "html.parser")
-                #precios.append(soup.find("span", class_=selectores[nombre]).text)
+    lugar = list(value["Urls"].keys())[0]
+    dineros = 100000000.00
+    for sitio, coste in precios.items():
+        if(float(coste.replace(',', '.')) < dineros):
+            lugar = sitio
+            dineros = float(coste.replace(',', '.'))
+    precioUnit = str(dineros).replace('.', ',') + "€"
+    precioTot = str(dineros * value["Cantidad"]).replace('.', ',') + "€"
+    fila.append(lugar)
+    fila.append(value["Cantidad"])
+    fila.append(precioUnit)
+    fila.append(precioTot)
+    fila.append(value["Urls"][lugar])
+    tabla.append(fila)
+    precioFinal += dineros * value["Cantidad"]
+
+
+precioEnTabla = str(precioFinal).replace('.', ',')
+if(not ',' in precioEnTabla):
+    precioEnTabla += ",00"
+precioEnTabla += "€"
+tabla2 = [["Precio Total", precioEnTabla]]
 
 print("Comparador de PCs 2022")
 print(tabulate(tabla, headers="firstrow", tablefmt="fancy_grid"))
+print(tabulate(tabla2, tablefmt="fancy_grid"))

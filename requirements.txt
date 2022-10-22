@@ -1,0 +1,4 @@
+requests_html
+tabulate
+beautifulsoup4
+cloudscraper

@@ -19,10 +19,10 @@ pc = {
     # Fuente de Alimentación
     # Tarjeta Gráfica
     "Tarjeta Gráfica" : {
-        "Nombre": "RTX 4090",
+        "Nombre": "Nvidia GeForce RTX 4080",
         "Cantidad": 1,
         "Urls": {
-            "PcComponentes": "https://www.pccomponentes.com/asus-tuf-gaming-geforce-rtx-4090-oc-24gb-gddr6x",
+            "PcComponentes": "https://www.pccomponentes.com/gigabyte-geforce-rtx-3090-gaming-oc-24g-24gb-gddr6x"
         }
-    },
+    }
 }

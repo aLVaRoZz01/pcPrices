@@ -3,8 +3,9 @@ import cloudscraper
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
 from components import pc
+import pyshorteners
 
-
+srtUrl = pyshorteners.Shortener()
 selectores = {
     "PcComponentes": "precio-main",
     "Amazon": ".a-offscreen",
@@ -21,6 +22,7 @@ for key, value in pc.items():
     precios = {}
 
     for nombre, url in value["Urls"].items():
+        print("ESTADO: Buscando " + value["Nombre"] + " en " + nombre, end="\r")
         if (nombre == "PcComponentes"):
             session = cloudscraper.create_scraper(delay=10, browser='chrome')
             with session.get(url) as response:
@@ -54,7 +56,8 @@ for key, value in pc.items():
                 except:
                     print('Ha cascao')
                     #print(response.html)
-
+        print("                                                                              ", end="\r")
+        
     lugar = list(value["Urls"].keys())[0]
     dineros = 100000000.00
     for sitio, coste in precios.items():
@@ -67,7 +70,7 @@ for key, value in pc.items():
     fila.append(value["Cantidad"])
     fila.append(precioUnit)
     fila.append(precioTot)
-    fila.append(value["Urls"][lugar])
+    fila.append(srtUrl.tinyurl.short(value["Urls"][lugar]))
     tabla.append(fila)
     precioFinal += dineros * value["Cantidad"]
 

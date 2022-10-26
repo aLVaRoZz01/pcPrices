@@ -10,7 +10,10 @@ selectores = {
     "PcComponentes": "precio-main",
     "Amazon": ".a-offscreen",
     "PcBox": [".vtex-product-price-1-x-currencyInteger", ".vtex-product-price-1-x-currencyFraction"],
-    "Coolmod": "#normalpricenumber"
+    "Coolmod": "#normalpricenumber",
+    "Corsair": ".product-price",
+    "Casemod": ".product-price",
+    "Nvidia": ".startingprice",
 }
 
 tabla = [["Componente", "Nombre", "Sitio Web", "Cantidad", "Precio Unit", "Precio Total", "URL"]]
@@ -42,7 +45,7 @@ for key, value in pc.items():
             session = HTMLSession()
             with session.get(url) as response:
                 #print(nombre)
-                #print(response)
+                #print(response.text)
                 response.html.render()
                 try:
                     if (nombre == "PcBox"):
@@ -50,8 +53,12 @@ for key, value in pc.items():
                         precio += ','
                         precio += response.html.find(selectores[nombre][1], first=True).text
                         precios[nombre] = precio
+                    elif (nombre == "Nvidia"):
+                        precio = response.html.find(selectores[nombre], first=True).text.replace('RTX 4080 (16GB) a partir de', '').replace('€', '').replace(' ', '').replace('.', '')
+                        precios[nombre] = precio
                     else:
-                        precio = response.html.find(selectores[nombre], first=True).text.replace('€', '')
+                        precio = response.html.find(selectores[nombre], first=True).text.replace('€', '').replace(' ', '')
+                        #print(precio)
                         precios[nombre] = precio
                 except:
                     print('Ha cascao')
@@ -75,7 +82,7 @@ for key, value in pc.items():
     precioFinal += dineros * value["Cantidad"]
 
 
-precioEnTabla = str(precioFinal).replace('.', ',')
+precioEnTabla = str(round(precioFinal, 2)).replace('.', ',')
 if(not ',' in precioEnTabla):
     precioEnTabla += ",00"
 precioEnTabla += "€"
